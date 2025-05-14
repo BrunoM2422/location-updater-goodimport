@@ -159,16 +159,22 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
     }
 
     res.json({
-      retorno: {
-        produto: {
-          id: produtoCompleto.id,
-          nome: produtoCompleto.nome,
-          localizacao: produtoCompleto.estoque?.localizacao || "",
-          imagem: produtoCompleto.midia?.imagens?.externas?.[0]?.link || null,
-          quantidade: produtoCompleto.estoque?.saldoVirtualTotal ?? 0,
-        }
-      }
-    });
+  retorno: {
+    produto: {
+      id: produtoCompleto.id,
+      nome: produtoCompleto.nome,
+      localizacao: produtoCompleto.estoque?.localizacao || "",
+      imagem: (
+        produtoCompleto.midia?.imagens?.externas?.[0]?.link ||
+        (produtoCompleto.midia?.imagens?.anexos?.[0]
+          ? `https://www.bling.com.br/Imagens/Produtos/${produtoCompleto.id}/${produtoCompleto.midia.imagens.anexos[0].id}/imagem.jpg`
+          : null)
+      ),
+      quantidade: produtoCompleto.estoque?.saldoVirtualTotal ?? 0,
+    }
+  }
+});
+
   } catch (erro) {
     console.error("❌ Erro ao buscar produto:", erro.response?.data || erro.message);
     res.status(404).json({ mensagem: "Produto não encontrado." });
