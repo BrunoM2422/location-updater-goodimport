@@ -14,8 +14,8 @@ app.use(express.static("public"));
 let accessToken = "";
 let logado = false;
 
-const USUARIO = "msestoque@magisol";
-const SENHA = "msestoque@2025";
+const USUARIO = "giestoque@goodimport";
+const SENHA = "giestoque@2025";
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
