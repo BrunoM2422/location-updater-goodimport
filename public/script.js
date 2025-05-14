@@ -29,6 +29,8 @@ formBuscar.addEventListener("submit", async (e) => {
       imagemEl.style.display = "none";
     }
     produtoId = produto.id;
+    // Limpa o campo de nova localização para o próximo produto
+    document.getElementById("localizacao").value = "";
   } catch (erro) {
     console.error(erro);
     alert("Erro ao buscar produto!");
