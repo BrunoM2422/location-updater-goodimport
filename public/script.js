@@ -32,7 +32,7 @@ formBuscar.addEventListener("submit", async (e) => {
 
     console.log("🖼️ Link da imagem:", produto.imagem);
 
-    if (produto.imagem && produto.imagem.startsWith("http")) {
+    if (produto.imagem) {
       imagemEl.src = produto.imagem;
       imagemEl.alt = "Imagem do Produto";
       imagemEl.style.display = "block";

@@ -77,6 +77,25 @@ app.get("/callback", async (req, res) => {
   }
 });
 
+// NOVO: Servir imagem do anexo diretamente
+app.get("/imagem-produto/:produtoId/:anexoId", async (req, res) => {
+  const { anexoId } = req.params;
+  if (!accessToken) return res.status(403).send("Não autenticado.");
+
+  try {
+    const imgResp = await axios.get(`https://www.bling.com.br/Api/v3/anexos/${anexoId}/download`, {
+      responseType: "stream",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    res.setHeader("Content-Type", imgResp.headers["content-type"]);
+    imgResp.data.pipe(res);
+  } catch (err) {
+    console.error("❌ Erro ao baixar imagem:", err.response?.data || err.message);
+    res.status(404).send("Imagem não encontrada.");
+  }
+});
+
 app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
   const { tipo, codigo } = req.params;
   if (!accessToken) {
@@ -93,7 +112,6 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       );
       const resumo = respSku.data?.data?.[0];
       if (!resumo) throw new Error("Produto não encontrado por SKU.");
-
       const respDet = await axios.get(
         `https://www.bling.com.br/Api/v3/produtos/${resumo.id}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -126,7 +144,6 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
             achou = true;
             break;
           }
-
           if (produto.variacoes?.length) {
             const variacao = produto.variacoes.find(v => v.gtin?.replace(/^0+/, "") === eanNorm);
             if (variacao) {
@@ -136,7 +153,6 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
               break;
             }
           }
-
           if (produto.itens?.length) {
             const itemKit = produto.itens.find(i => i.gtin?.replace(/^0+/, "") === eanNorm);
             if (itemKit) {
@@ -156,12 +172,11 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       return res.status(400).json({ mensagem: "Tipo inválido. Use 'sku' ou 'ean'." });
     }
 
-    // Apenas imagens de anexos
-    const anexos = produtoCompleto.midia?.imagens?.anexos;
-    let imagem = null;
-    if (Array.isArray(anexos) && anexos.length) {
-      imagem = `https://www.bling.com.br/Imagens/Produtos/${produtoCompleto.id}/${anexos[0].id}/imagem.jpg`;
-    }
+    // Trata imagem
+    const anexo = produtoCompleto.midia?.imagens?.anexos?.[0];
+    const imagemUrl = anexo
+      ? `${req.protocol}://${req.get("host")}/imagem-produto/${produtoCompleto.id}/${anexo.id}`
+      : null;
 
     res.json({
       retorno: {
@@ -169,7 +184,7 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
           id: produtoCompleto.id,
           nome: produtoCompleto.nome,
           localizacao: produtoCompleto.estoque?.localizacao || "",
-          imagem,
+          imagem: imagemUrl,
           quantidade: produtoCompleto.estoque?.saldoVirtualTotal ?? 0,
         }
       }
