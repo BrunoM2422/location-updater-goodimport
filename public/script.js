@@ -32,15 +32,16 @@ formBuscar.addEventListener("submit", async (e) => {
 
     console.log("🖼️ Link da imagem:", produto.imagem);
 
-    if (produto.imagem) {
-      imagemEl.src = produto.imagem;
-      imagemEl.alt = "Imagem do Produto";
-      imagemEl.style.display = "block";
-    } else {
-      imagemEl.src = "";
-      imagemEl.alt = "Imagem não disponível";
-      imagemEl.style.display = "none";
-    }
+    if (produto.imagem && typeof produto.imagem === "string") {
+  imagemEl.src = produto.imagem;
+  imagemEl.alt = "Imagem do Produto";
+  imagemEl.style.display = "block";
+} else {
+  imagemEl.src = "";
+  imagemEl.alt = "Imagem não disponível";
+  imagemEl.style.display = "none";
+}
+
 
   } catch (erro) {
     console.error("❌ Erro ao buscar produto:", erro);
