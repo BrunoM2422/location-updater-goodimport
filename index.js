@@ -1,3 +1,4 @@
+// backend/index.js
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
@@ -12,7 +13,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 let accessToken = "";
-let logado = false;
 
 const USUARIO = "giestoque@goodimport";
 const SENHA = "giestoque@2025";
@@ -77,17 +77,19 @@ app.get("/callback", async (req, res) => {
   }
 });
 
-// NOVO: Servir imagem do anexo diretamente
+// Servir imagem do anexo diretamente
 app.get("/imagem-produto/:produtoId/:anexoId", async (req, res) => {
   const { anexoId } = req.params;
   if (!accessToken) return res.status(403).send("Não autenticado.");
 
   try {
-    const imgResp = await axios.get(`https://www.bling.com.br/Api/v3/anexos/${anexoId}/download`, {
-      responseType: "stream",
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-
+    const imgResp = await axios.get(
+      `https://www.bling.com.br/Api/v3/anexos/${anexoId}/download`,
+      {
+        responseType: "stream",
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
     res.setHeader("Content-Type", imgResp.headers["content-type"]);
     imgResp.data.pipe(res);
   } catch (err) {
@@ -106,6 +108,7 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
     let produtoCompleto;
 
     if (tipo === "sku") {
+      // busca por SKU
       const respSku = await axios.get(
         `https://www.bling.com.br/Api/v3/produtos?sku=${codigo}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -118,6 +121,7 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       );
       produtoCompleto = respDet.data?.data;
     } else if (tipo === "ean") {
+      // busca paginada por EAN
       const eanNorm = codigo.replace(/^0+/, "");
       let pagina = 1;
       let encontrado = null;
@@ -172,12 +176,23 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       return res.status(400).json({ mensagem: "Tipo inválido. Use 'sku' ou 'ean'." });
     }
 
-    // Trata imagem
-    const anexo = produtoCompleto.midia?.imagens?.anexos?.[0];
-    const imagemUrl = anexo
-      ? `${req.protocol}://${req.get("host")}/imagem-produto/${produtoCompleto.id}/${anexo.id}`
-      : null;
+    // --- DEBUG: veja no console como chegam as imagens
+    console.log("➡️ produtoCompleto.midia.imagens =", produtoCompleto.midia?.imagens);
 
+    // Tratamento de imagem: externas primeiro, depois anexos
+    const imagens = produtoCompleto.midia?.imagens;
+    let imagemUrl = null;
+
+    if (imagens?.externas?.length > 0) {
+      // use a URL da imagem externa (pode ser .url ou .urlImagem)
+      imagemUrl = imagens.externas[0].url || imagens.externas[0].urlImagem;
+    } else if (imagens?.anexos?.length > 0) {
+      // usa seu endpoint interno para servir o anexo
+      const anexo = imagens.anexos[0];
+      imagemUrl = `${req.protocol}://${req.get("host")}/imagem-produto/${produtoCompleto.id}/${anexo.id}`;
+    }
+
+    // Retorna o JSON com a imagem correta
     res.json({
       retorno: {
         produto: {
