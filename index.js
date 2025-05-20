@@ -174,26 +174,29 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       return res.status(400).json({ mensagem: "Tipo inválido. Use 'sku' ou 'ean'." });
     }
 
-    const imagens = produtoCompleto.midia?.imagens;
+    // Construir URL principal de imagem (externa, interna ou anexo)
+    const imagens = produtoCompleto.midia?.imagens || {};
     let imagemUrl = null;
 
-    if (imagens?.externas?.length > 0) {
+    if (imagens.externas?.length > 0) {
       imagemUrl = imagens.externas[0].url || imagens.externas[0].urlImagem;
-    } else if (imagens?.internas?.length > 0) {
+    } else if (imagens.internas?.length > 0) {
       imagemUrl = imagens.internas[0].link;
-    } else if (imagens?.anexos?.length > 0) {
+    } else if (imagens.anexos?.length > 0) {
       const anexo = imagens.anexos[0];
       imagemUrl = `${req.protocol}://${req.get("host")}/imagem-produto/${produtoCompleto.id}/${anexo.id}`;
     }
 
+    // Incluir todas as imagens no retorno para front-end
     res.json({
       retorno: {
         produto: {
           id: produtoCompleto.id,
           nome: produtoCompleto.nome,
           localizacao: produtoCompleto.estoque?.localizacao || "",
-          imagem: imagemUrl,
           quantidade: produtoCompleto.estoque?.saldoVirtualTotal ?? 0,
+          imagem: imagemUrl,
+          midia: produtoCompleto.midia,
         }
       }
     });

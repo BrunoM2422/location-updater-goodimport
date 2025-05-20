@@ -1,4 +1,4 @@
-const apiBaseUrl = "https://location-updater-goodimport.onrender.com"; // Preencha se necessário
+const apiBaseUrl = "https://location-updater-goodimport.onrender.com";
 
 const formBuscar = document.getElementById("form-buscar");
 const formAtualizar = document.getElementById("form-atualizar");
@@ -29,12 +29,21 @@ formBuscar.addEventListener("submit", async (e) => {
     document.getElementById("localizacao").value = "";
 
     const imagemEl = document.getElementById("imagem-produto");
+    imagemEl.alt = "Imagem do Produto";
 
-    // ✅ Atualizado para usar a primeira imagem interna (caso exista)
-    const imagensInternas = produto.midia?.imagens?.internas;
-    if (imagensInternas && imagensInternas.length > 0) {
-      imagemEl.src = imagensInternas[0].link;
-      imagemEl.alt = "Imagem do Produto";
+    const midia = produto.midia?.imagens || {};
+    let imagemUrl = "";
+
+    if (midia.externas?.length > 0) {
+      imagemUrl = midia.externas[0].url || midia.externas[0].urlImagem;
+    } else if (midia.internas?.length > 0) {
+      imagemUrl = midia.internas[0].link;
+    } else if (midia.anexos?.length > 0) {
+      imagemUrl = `${apiBaseUrl}/imagem-produto/${produto.id}/${midia.anexos[0].id}`;
+    }
+
+    if (imagemUrl) {
+      imagemEl.src = imagemUrl;
       imagemEl.style.display = "block";
     } else {
       imagemEl.src = "";
