@@ -1,4 +1,4 @@
-const apiBaseUrl = "";
+const apiBaseUrl = ""; // Preencha se necessário
 
 const formBuscar = document.getElementById("form-buscar");
 const formAtualizar = document.getElementById("form-atualizar");
@@ -12,8 +12,6 @@ formBuscar.addEventListener("submit", async (e) => {
   const codigo = document.getElementById("codigo").value.trim();
 
   document.getElementById("mensagem").innerText = "";
-  document.getElementById("imagem-produto").style.display = "none";
-  document.getElementById("galeria-imagens").innerHTML = "";
 
   try {
     const resposta = await fetch(`${apiBaseUrl}/buscar-produto/${tipo}/${codigo}`);
@@ -32,26 +30,16 @@ formBuscar.addEventListener("submit", async (e) => {
 
     const imagemEl = document.getElementById("imagem-produto");
 
-    if (produto.imagem && typeof produto.imagem === "string") {
-      imagemEl.src = produto.imagem;
+    // ✅ Atualizado para usar a primeira imagem interna (caso exista)
+    const imagensInternas = produto.midia?.imagens?.internas;
+    if (imagensInternas && imagensInternas.length > 0) {
+      imagemEl.src = imagensInternas[0].link;
       imagemEl.alt = "Imagem do Produto";
       imagemEl.style.display = "block";
     } else {
       imagemEl.src = "";
       imagemEl.alt = "Imagem não disponível";
       imagemEl.style.display = "none";
-    }
-
-    // Mostrar imagens internas, se houver
-    const galeria = document.getElementById("galeria-imagens");
-    if (produto.midia?.internas?.length) {
-      console.log("🖼️ Imagens internas:", produto.midia.internas);
-      produto.midia.internas.forEach((imgObj) => {
-        const img = document.createElement("img");
-        img.src = imgObj.linkMiniatura || imgObj.link;
-        img.alt = "Imagem Interna";
-        galeria.appendChild(img);
-      });
     }
 
   } catch (erro) {
