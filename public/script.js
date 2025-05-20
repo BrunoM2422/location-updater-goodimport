@@ -1,4 +1,4 @@
-const apiBaseUrl = ""; // Preencha se necessário
+const apiBaseUrl = "https://location-updater-goodimport.onrender.com"; // Preencha se necessário
 
 const formBuscar = document.getElementById("form-buscar");
 const formAtualizar = document.getElementById("form-atualizar");
