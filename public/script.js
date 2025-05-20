@@ -12,6 +12,8 @@ formBuscar.addEventListener("submit", async (e) => {
   const codigo = document.getElementById("codigo").value.trim();
 
   document.getElementById("mensagem").innerText = "";
+  document.getElementById("imagem-produto").style.display = "none";
+  document.getElementById("galeria-imagens").innerHTML = "";
 
   try {
     const resposta = await fetch(`${apiBaseUrl}/buscar-produto/${tipo}/${codigo}`);
@@ -26,22 +28,31 @@ formBuscar.addEventListener("submit", async (e) => {
     document.getElementById("nome-produto").innerText = produto.nome;
     document.getElementById("localizacao-atual").innerText = produto.localizacao?.trim() || "(vazio)";
     document.getElementById("quantidade-produto").innerText = produto.quantidade ?? "(indisponível)";
-    document.getElementById("localizacao").value = "";  // limpa o campo após cada busca
+    document.getElementById("localizacao").value = "";
 
     const imagemEl = document.getElementById("imagem-produto");
 
-    console.log("🖼️ Link da imagem:", produto.imagem);
-
     if (produto.imagem && typeof produto.imagem === "string") {
-  imagemEl.src = produto.imagem;
-  imagemEl.alt = "Imagem do Produto";
-  imagemEl.style.display = "block";
-} else {
-  imagemEl.src = "";
-  imagemEl.alt = "Imagem não disponível";
-  imagemEl.style.display = "none";
-}
+      imagemEl.src = produto.imagem;
+      imagemEl.alt = "Imagem do Produto";
+      imagemEl.style.display = "block";
+    } else {
+      imagemEl.src = "";
+      imagemEl.alt = "Imagem não disponível";
+      imagemEl.style.display = "none";
+    }
 
+    // Mostrar imagens internas, se houver
+    const galeria = document.getElementById("galeria-imagens");
+    if (produto.midia?.internas?.length) {
+      console.log("🖼️ Imagens internas:", produto.midia.internas);
+      produto.midia.internas.forEach((imgObj) => {
+        const img = document.createElement("img");
+        img.src = imgObj.linkMiniatura || imgObj.link;
+        img.alt = "Imagem Interna";
+        galeria.appendChild(img);
+      });
+    }
 
   } catch (erro) {
     console.error("❌ Erro ao buscar produto:", erro);
