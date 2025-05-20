@@ -108,7 +108,6 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
     let produtoCompleto;
 
     if (tipo === "sku") {
-      // busca por SKU
       const respSku = await axios.get(
         `https://www.bling.com.br/Api/v3/produtos?sku=${codigo}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -121,7 +120,6 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       );
       produtoCompleto = respDet.data?.data;
     } else if (tipo === "ean") {
-      // busca paginada por EAN
       const eanNorm = codigo.replace(/^0+/, "");
       let pagina = 1;
       let encontrado = null;
@@ -176,23 +174,18 @@ app.get("/buscar-produto/:tipo/:codigo", async (req, res) => {
       return res.status(400).json({ mensagem: "Tipo inválido. Use 'sku' ou 'ean'." });
     }
 
-    // --- DEBUG: veja no console como chegam as imagens
-    console.log("➡️ produtoCompleto.midia.imagens =", produtoCompleto.midia?.imagens);
-
-    // Tratamento de imagem: externas primeiro, depois anexos
     const imagens = produtoCompleto.midia?.imagens;
     let imagemUrl = null;
 
     if (imagens?.externas?.length > 0) {
-      // use a URL da imagem externa (pode ser .url ou .urlImagem)
       imagemUrl = imagens.externas[0].url || imagens.externas[0].urlImagem;
+    } else if (imagens?.internas?.length > 0) {
+      imagemUrl = imagens.internas[0].link;
     } else if (imagens?.anexos?.length > 0) {
-      // usa seu endpoint interno para servir o anexo
       const anexo = imagens.anexos[0];
       imagemUrl = `${req.protocol}://${req.get("host")}/imagem-produto/${produtoCompleto.id}/${anexo.id}`;
     }
 
-    // Retorna o JSON com a imagem correta
     res.json({
       retorno: {
         produto: {
